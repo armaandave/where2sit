@@ -9,14 +9,14 @@ import Loading from "./loading"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import React from "react"
 
 // API types
 interface BestSeatSuggestion {
   id: number;
-  screen_id: number;
   suggested_seat: string;
   user_notes: string | null;
-  timestamp: string; // ISO 8601 string
+  timestamp: string; // Assuming ISO string from backend
 }
 
 interface Screen {
@@ -24,8 +24,7 @@ interface Screen {
   name: string
   screen_number?: number
   type?: string
-  best_seat?: string; // Keep for now, though not used for display here
-  suggestions?: BestSeatSuggestion[]; // Add suggestions property
+  suggestions?: BestSeatSuggestion[]; // Use this for best seat recommendation
 }
 
 interface Theater {
@@ -54,6 +53,7 @@ export default function ScreenDetails({ params }: { params: { city: string; id: 
   const [userNotes, setUserNotes] = useState("");
   const [submissionMessage, setSubmissionMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [bestSeat, setBestSeat] = useState<BestSeatSuggestion | null>(null);
 
   useEffect(() => {
     const fetchTheater = async () => {
@@ -67,15 +67,23 @@ export default function ScreenDetails({ params }: { params: { city: string; id: 
         const data = await res.json()
         setTheater(data)
         
-        // Find the selected screen and ensure suggestions are loaded
+        // Find the selected screen
         const screen = data.screens?.find((s: Screen) => s.id.toString() === params.screenId)
         if (screen) {
           setSelectedScreen(screen)
         } else {
           throw new Error("Screen not found")
         }
-      } catch (err: any) {
-        setError(err.message)
+
+        // Fetch best seat suggestion
+        const bestSeatRes = await fetch(`http://localhost:8000/screens/${params.screenId}/best_seat`)
+        if (bestSeatRes.ok) {
+          const bestSeatData = await bestSeatRes.json()
+          setBestSeat(bestSeatData)
+        }
+        // Don't treat 404 as an error - it just means no suggestions yet
+      } catch (err) {
+        setError("Failed to fetch theater details")
       } finally {
         setLoading(false)
       }
@@ -117,20 +125,16 @@ export default function ScreenDetails({ params }: { params: { city: string; id: 
       setSubmissionMessage(data.message);
       setSuggestedSeat("");
       setUserNotes("");
-      setShowSuggestionForm(false);
-      // Re-fetch theater data to update best seat display after a successful submission
-      // This ensures the page reflects the new suggestion immediately
-      if (theater) {
-        const res = await fetch(`http://localhost:8000/theaters/${params.id}`);
-        if (res.ok) {
-          const updatedData = await res.json();
-          setTheater(updatedData);
-          const updatedScreen = updatedData.screens?.find((s: Screen) => s.id.toString() === params.screenId);
-          if (updatedScreen) {
-            setSelectedScreen(updatedScreen);
-          }
+      // After successful submission, re-fetch screen data to update displayed best seat
+      const updatedRes = await fetch(`http://localhost:8000/theaters/${params.id}`);
+      if (updatedRes.ok) {
+        const updatedData = await updatedRes.json();
+        const updatedScreen = updatedData.screens?.find((s: Screen) => s.id.toString() === params.screenId);
+        if (updatedScreen) {
+          setSelectedScreen(updatedScreen);
         }
       }
+      setShowSuggestionForm(false);
 
     } catch (err: any) {
       setError(err.message);
@@ -175,15 +179,15 @@ export default function ScreenDetails({ params }: { params: { city: string; id: 
                 </p>
               </div>
 
-              {/* Seat Map */}
+              {/* Best Seat Display */}
               <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm">
                 <CardContent className="p-6">
                   <div className="py-8 text-center">
                     <div className="space-y-6">
-                      {selectedScreen.suggestions && selectedScreen.suggestions.length > 0 ? (
+                      {bestSeat ? (
                         <div className="inline-flex items-center justify-center gap-3 bg-green-50 border border-green-200 rounded-lg px-6 py-4">
                           <div className="w-8 h-8 bg-green-500 rounded-md flex items-center justify-center text-white text-lg">★</div>
-                          <span className="text-green-800 font-bold text-xl">Best Seat - {selectedScreen.suggestions[0].suggested_seat}</span>
+                          <span className="text-green-800 font-bold text-xl">Best Seat - {bestSeat.suggested_seat}</span>
                         </div>
                       ) : (
                         <p className="text-gray-600 text-lg font-medium">No best seat recommendation yet.</p>
@@ -240,7 +244,7 @@ export default function ScreenDetails({ params }: { params: { city: string; id: 
                         {isSubmitting ? "Submitting..." : "Submit Suggestion"}
                       </Button>
                       {submissionMessage && <p className="text-center text-green-600 mt-2">{submissionMessage}</p>}
-                      {error && <p className="text-center text-red-500 mt-2">Error: {error}</p>}
+                      {error && <p className="text-center text-red-500 mt-2">{error}</p>}
                     </form>
                   </CardContent>
                 </Card>

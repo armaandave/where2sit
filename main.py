@@ -1,12 +1,11 @@
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session
 from database import SessionLocal
 from models import Theater, Screen, BestSeatSuggestion
 from sqlalchemy import distinct
 from pydantic import BaseModel
 from typing import List
-from datetime import datetime
 
 app = FastAPI()
 
@@ -29,95 +28,96 @@ def get_db():
 def read_root():
     return {"message": "Welcome to BestSeat!"}
 
-@app.get("/theaters", response_model=List[TheaterDetailResponse])
-def list_theaters(db: Session = Depends(get_db)):
-    theaters = db.query(Theater).options(joinedload(Theater.screens)).all()
-    response_theaters = []
-    for theater in theaters:
-        # Ensure address is a dict for consistency
-        if isinstance(theater.address, str):
-            address_dict = {"full_address": theater.address}
-        else:
-            address_dict = {
-                "street": theater.street,
-                "city": theater.city,
-                "state": theater.state,
-                "postcode": theater.postcode,
-                "country": theater.country,
-            }
-        response_theaters.append(TheaterDetailResponse(
-            id=theater.id,
-            name=theater.name,
-            brand=theater.brand,
-            chain=theater.chain,
-            address=address_dict,  # Pass the dict here
-            street=theater.street,
-            city=theater.city,
-            state=theater.state,
-            country=theater.country,
-            postcode=theater.postcode,
-            screens_count=len(theater.screens) if theater.screens else 0,
-            screens=theater.screens, # FastAPI/Pydantic will handle nested serialization
-        ))
-    return response_theaters
+@app.get("/theaters")
+def get_theaters(db: Session = Depends(get_db)):
+    theaters = db.query(Theater).all()
+    return [
+        {
+            "id": t.id,
+            "name": t.name,
+            "brand": t.brand,
+            "city": t.city,
+            "state": t.state,
+            "country": t.country,
+            "street": t.street,
+            "postcode": t.postcode,
+            "address": {
+                "street": t.street,
+                "city": t.city,
+                "state": t.state,
+                "postcode": t.postcode,
+                "country": t.country
+            },
+            "screens_count": t.screens_count,
+        }
+        for t in theaters
+    ]
 
-@app.get("/theaters/{id}", response_model=TheaterDetailResponse)
-def get_theater_details(id: int, db: Session = Depends(get_db)):
-    theater = db.query(Theater).options(
-        joinedload(Theater.screens).options(joinedload(Screen.suggestions).order_by(BestSeatSuggestion.timestamp.desc())) # Eager load and order suggestions
-    ).filter(Theater.id == id).first()
-
+@app.get("/theaters/{theater_id}")
+def get_theater(theater_id: int, db: Session = Depends(get_db)):
+    theater = db.query(Theater).filter(Theater.id == theater_id).first()
     if not theater:
         raise HTTPException(status_code=404, detail="Theater not found")
-
-    # Ensure address is a dict for consistency
-    if isinstance(theater.address, str):
-        address_dict = {"full_address": theater.address}
-    else:
-        address_dict = {
+    screens = db.query(Screen).filter(Screen.theater_id == theater_id).all()
+    return {
+        "id": theater.id,
+        "name": theater.name,
+        "brand": theater.brand,
+        "address": {
             "street": theater.street,
             "city": theater.city,
             "state": theater.state,
             "postcode": theater.postcode,
-            "country": theater.country,
-        }
-    return TheaterDetailResponse(
-        id=theater.id,
-        name=theater.name,
-        brand=theater.brand,
-        chain=theater.chain,
-        address=address_dict,
-        street=theater.street,
-        city=theater.city,
-        state=theater.state,
-        country=theater.country,
-        postcode=theater.postcode,
-        screens_count=len(theater.screens) if theater.screens else 0,
-        screens=theater.screens, # Pydantic will handle nested serialization
-    )
+            "country": theater.country
+        },
+        "lat": theater.lat,
+        "lon": theater.lon,
+        "screens_count": theater.screens_count,
+        "screens_count_source": theater.screens_count_source,
+        "screens": [
+            {
+                "id": screen.id,
+                "name": screen.name,
+                "screen_number": screen.screen_number,
+                "is_imax": screen.is_imax,
+                "best_seat": screen.best_seat,
+                "notes": screen.notes
+            }
+            for screen in screens
+        ]
+    }
 
-@app.get("/cities", response_model=List[str])
-def list_cities(db: Session = Depends(get_db)):
-    cities = db.query(distinct(Theater.city)).all()
-    return [city[0] for city in cities if city[0] is not None]
+@app.get("/cities")
+def get_cities(db: Session = Depends(get_db)):
+    cities = db.query(distinct(Theater.city)).filter(Theater.city.isnot(None)).all()
+    return [city[0] for city in cities]
 
-@app.get("/theaters/by_city/{city}", response_model=List[TheaterDetailResponse])
+@app.get("/theaters/by_city/{city}")
 def get_theaters_by_city(city: str, db: Session = Depends(get_db)):
-    theaters = db.query(Theater).options(joinedload(Theater.screens)).filter(Theater.city.ilike(f"%{city}%")).all()
-    return [TheaterDetailResponse(
-        id=theater.id,
-        name=theater.name,
-        brand=theater.brand,
-        chain=theater.chain,
-        address=theater.address,
-        street=theater.street,
-        city=theater.city,
-        state=theater.state,
-        country=theater.country,
-        postcode=theater.postcode,
-        screens_count=len(theater.screens) if theater.screens else 0,
-        screens=theater.screens, # Pydantic will handle nested serialization
-    ) for theater in theaters]
+    # First, let's see what cities we actually have
+    all_cities = db.query(distinct(Theater.city)).filter(Theater.city.isnot(None)).all()
+    print(f"Available cities in DB: {[c[0] for c in all_cities]}")
+    print(f"Searching for city: {city}")
+    
+    # Use case-insensitive search
+    theaters = db.query(Theater).filter(Theater.city.ilike(city)).all()
+    if not theaters:
+        raise HTTPException(
+            status_code=404, 
+            detail=f"No theaters found in {city}. Available cities: {[c[0] for c in all_cities]}"
+        )
+    return [
+        {
+            "id": t.id,
+            "name": t.name,
+            "brand": t.brand,
+            "street": t.street,
+            "state": t.state,
+            "postcode": t.postcode,
+            "screens_count": t.screens_count,
+        }
+        for t in theaters
+    ]
 
 @app.get("/screens")
 def get_screens(db: Session = Depends(get_db)):
@@ -188,41 +188,19 @@ def submit_best_seat(screen_id: int, data: BestSeatInput, db: Session = Depends(
     db.refresh(suggestion)
     return {"message": "Thank you for your suggestion!", "suggestion_id": suggestion.id}
 
-# Pydantic models for response
-class BestSeatSuggestionResponse(BaseModel):
-    id: int
-    screen_id: int
-    suggested_seat: str
-    user_notes: str | None
-    timestamp: datetime
-
-    class Config:
-        from_attributes = True
-
-class ScreenResponse(BaseModel):
-    id: int | str
-    name: str
-    screen_number: int | None
-    type: str | None
-    best_seat: str | None
-    suggestions: List[BestSeatSuggestionResponse] = [] # Include suggestions
-
-    class Config:
-        from_attributes = True
-
-class TheaterDetailResponse(BaseModel):
-    id: int | str
-    name: str
-    brand: str | None
-    chain: str | None
-    address: dict | str | None
-    street: str | None
-    city: str | None
-    state: str | None
-    country: str | None
-    postcode: str | None
-    screens_count: int | None
-    screens: List[ScreenResponse] = []
-
-    class Config:
-        from_attributes = True
+@app.get("/screens/{screen_id}/best_seat")
+def get_best_seat_suggestion(screen_id: int, db: Session = Depends(get_db)):
+    # Get the most recent suggestion for this screen
+    suggestion = db.query(BestSeatSuggestion)\
+        .filter(BestSeatSuggestion.screen_id == screen_id)\
+        .order_by(BestSeatSuggestion.timestamp.desc())\
+        .first()
+    
+    if not suggestion:
+        raise HTTPException(status_code=404, detail="No best seat suggestions found for this screen")
+    
+    return {
+        "suggested_seat": suggestion.suggested_seat,
+        "user_notes": suggestion.user_notes,
+        "timestamp": suggestion.timestamp
+    }
