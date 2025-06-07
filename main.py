@@ -9,6 +9,7 @@ from typing import List
 
 app = FastAPI()
 
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Frontend URL during dev

@@ -1,3 +1,5 @@
+import os
+from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.dialects.postgresql import insert
@@ -5,7 +7,11 @@ from models import Base, Theater, Screen
 import requests
 import re
 
-DATABASE_URL = "postgresql+psycopg2://postgres:Superman!23@localhost:5432/bestseatdb"
+load_dotenv()
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL environment variable not set. Please check your .env file.")
 
 engine = create_engine(DATABASE_URL)
 Session = sessionmaker(bind=engine)
