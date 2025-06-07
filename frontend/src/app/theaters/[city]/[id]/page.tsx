@@ -56,7 +56,7 @@ export default function TheaterDetails({ params }: { params: { city: string; id:
       setLoading(true)
       setError(null)
       try {
-        const res = await fetch(`http://localhost:8000/theaters/${params.id}`)
+        const res = await fetch(`https://bestseat.fly.dev/theaters/${params.id}`)
         if (!res.ok) {
           throw new Error("Failed to fetch theater details")
         }

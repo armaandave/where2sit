@@ -60,7 +60,7 @@ export default function ScreenDetails({ params }: { params: { city: string; id: 
       setLoading(true)
       setError(null)
       try {
-        const res = await fetch(`http://localhost:8000/theaters/${params.id}`)
+        const res = await fetch(`https://bestseat.fly.dev/theaters/${params.id}`)
         if (!res.ok) {
           throw new Error("Failed to fetch theater details")
         }
@@ -76,7 +76,7 @@ export default function ScreenDetails({ params }: { params: { city: string; id: 
         }
 
         // Fetch best seat suggestion
-        const bestSeatRes = await fetch(`http://localhost:8000/screens/${params.screenId}/best_seat`)
+        const bestSeatRes = await fetch(`https://bestseat.fly.dev/screens/${params.screenId}/best_seat`)
         if (bestSeatRes.ok) {
           const bestSeatData = await bestSeatRes.json()
           setBestSeat(bestSeatData)
@@ -105,7 +105,7 @@ export default function ScreenDetails({ params }: { params: { city: string; id: 
     }
 
     try {
-      const response = await fetch(`http://localhost:8000/screens/${params.screenId}/suggest_best_seat`, {
+      const response = await fetch(`https://bestseat.fly.dev/screens/${params.screenId}/suggest_best_seat`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -126,7 +126,7 @@ export default function ScreenDetails({ params }: { params: { city: string; id: 
       setSuggestedSeat("");
       setUserNotes("");
       // After successful submission, re-fetch screen data to update displayed best seat
-      const updatedRes = await fetch(`http://localhost:8000/theaters/${params.id}`);
+      const updatedRes = await fetch(`https://bestseat.fly.dev/theaters/${params.id}`);
       if (updatedRes.ok) {
         const updatedData = await updatedRes.json();
         const updatedScreen = updatedData.screens?.find((s: Screen) => s.id.toString() === params.screenId);

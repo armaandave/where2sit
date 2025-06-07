@@ -205,3 +205,7 @@ def get_best_seat_suggestion(screen_id: int, db: Session = Depends(get_db)):
         "user_notes": suggestion.user_notes,
         "timestamp": suggestion.timestamp
     }
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("main:app", host="0.0.0.0", port=8000)

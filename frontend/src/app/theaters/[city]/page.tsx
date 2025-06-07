@@ -74,7 +74,7 @@ export default function TheatersByCity({ params }: { params: { city: string } })
       setLoading(true)
       setError(null)
       try {
-        const res = await fetch(`http://localhost:8000/theaters/by_city/${params.city}`)
+        const res = await fetch(`https://bestseat.fly.dev/theaters/by_city/${params.city}`)
         if (!res.ok) {
           throw new Error("Failed to fetch theaters")
         }
@@ -117,7 +117,7 @@ export default function TheatersByCity({ params }: { params: { city: string } })
     setTheaterLoading(true)
     setError(null)
     try {
-      const res = await fetch(`http://localhost:8000/theaters/${theater.id}`)
+      const res = await fetch(`https://bestseat.fly.dev/theaters/${theater.id}`)
       if (!res.ok) {
         throw new Error("Failed to fetch theater details")
       }

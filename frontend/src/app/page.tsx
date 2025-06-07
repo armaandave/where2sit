@@ -37,7 +37,7 @@ export default function Home() {
   useEffect(() => {
     const fetchCities = async () => {
       try {
-        const response = await fetch("http://localhost:8000/cities")
+        const response = await fetch("https://bestseat.fly.dev/cities")
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`)
         }
@@ -51,7 +51,7 @@ export default function Home() {
 
     const fetchAllTheaters = async () => {
       try {
-        const response = await fetch("http://localhost:8000/theaters")
+        const response = await fetch("https://bestseat.fly.dev/theaters")
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`)
         }
