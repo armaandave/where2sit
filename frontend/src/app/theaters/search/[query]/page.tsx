@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { MapPin, ArrowLeft } from "lucide-react"
-import Loading from "../loading"
 
 interface Theater {
   id: number | string
