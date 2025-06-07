@@ -67,21 +67,15 @@ export default function Home() {
     fetchAllTheaters()
   }, [])
 
-  const handleGo = useCallback(() => {
-    setLoading(true)
-    setError(null)
-
-    if (citySearchQuery.trim()) {
-      const sanitizedCity = citySearchQuery.trim().toLowerCase().replace(/\s+/g, "-")
-      router.push(`/theaters/${sanitizedCity}`)
-    } else if (theaterSearchQuery.trim()) {
-      const sanitizedTheaterName = theaterSearchQuery.trim().toLowerCase().replace(/\s+/g, "-")
-      router.push(`/theaters/search-by-name/${sanitizedTheaterName}`)
-    } else {
-      setError("Please enter a city or a theater name.")
-      setLoading(false)
+  const handleGo = async () => {
+    if (citySearchQuery) {
+      router.push(`/theaters/${citySearchQuery.toLowerCase().replace(/\s+/g, "-")}`);
+    } else if (theaterSearchQuery) {
+      // Navigate to theater search results page
+      const searchQuery = theaterSearchQuery.toLowerCase().replace(/\s+/g, "-");
+      router.push(`/theaters/search/${searchQuery}`);
     }
-  }, [citySearchQuery, theaterSearchQuery, router])
+  };
 
   const handleSuggestionClick = useCallback((city: string) => {
     setCitySearchQuery(city)

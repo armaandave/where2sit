@@ -167,19 +167,22 @@ export default function TheatersByCity({ params }: { params: { city: string } })
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="container mx-auto px-4 py-8 relative">
-        {/* Header */}
-        <div className="text-center mb-12">
-        </div>
-
         {/* Back Button */}
         <Button
           variant="ghost"
-          onClick={() => router.push("/")}
+          onClick={() => router.back()}
           className="absolute top-6 left-6 z-10 px-4 py-2 text-base font-medium hover:bg-white/60 rounded-lg shadow-none"
         >
           <ArrowLeft className="w-5 h-5 mr-2" />
           Back
         </Button>
+
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">
+            Theaters in {params.city.replace(/-/g, " ").replace(/\b\w/g, (char) => char.toUpperCase())}
+          </h1>
+        </div>
 
         {/* Theaters List */}
         <div className="max-w-4xl mx-auto pb-8">
