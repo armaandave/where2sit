@@ -29,6 +29,10 @@ def get_db():
 def read_root():
     return {"message": "Welcome to BestSeat!"}
 
+@app.get("/healthz", status_code=200)
+def healthz():
+    return {"status": "ok"}
+
 @app.get("/theaters")
 def get_theaters(db: Session = Depends(get_db)):
     theaters = db.query(Theater).all()
