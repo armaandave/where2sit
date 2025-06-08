@@ -71,9 +71,9 @@ export default function Home() {
     if (citySearchQuery) {
       router.push(`/theaters/${citySearchQuery.toLowerCase().replace(/\s+/g, "-")}`);
     } else if (theaterSearchQuery) {
-      // Navigate to theater search results page
-      const searchQuery = theaterSearchQuery.toLowerCase().replace(/\s+/g, "-");
-      router.push(`/theaters/search/${searchQuery}`);
+      // Encode the theater search query for the URL, without replacing spaces with hyphens
+      const encodedQuery = encodeURIComponent(theaterSearchQuery);
+      router.push(`/theaters/search/${encodedQuery}`);
     }
   };
 

@@ -26,6 +26,9 @@ export default function TheaterSearchResults({ params }: { params: { query: stri
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // Decode the query for display and filtering
+  const decodedQuery = decodeURIComponent(params.query).replace(/-/g, " ");
+
   useEffect(() => {
     const fetchTheaters = async () => {
       setLoading(true)
@@ -37,8 +40,8 @@ export default function TheaterSearchResults({ params }: { params: { query: stri
         }
         const allTheaters = await response.json()
         
-        // Filter theaters by name (case insensitive)
-        const searchQuery = params.query.toLowerCase()
+        // Filter theaters by name (case insensitive) using the decoded query
+        const searchQuery = decodedQuery.toLowerCase()
         const matchingTheaters = allTheaters.filter((theater: Theater) => 
           theater.name.toLowerCase().includes(searchQuery)
         )
@@ -52,7 +55,7 @@ export default function TheaterSearchResults({ params }: { params: { query: stri
     }
 
     fetchTheaters()
-  }, [params.query])
+  }, [decodedQuery]) // Depend on decodedQuery
 
   const handleTheaterClick = (theater: Theater) => {
     if (theater.city) {
@@ -77,7 +80,7 @@ export default function TheaterSearchResults({ params }: { params: { query: stri
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">
-            Theaters matching "{params.query}"
+            Theaters matching "{decodedQuery}"
           </h1>
         </div>
 
@@ -88,7 +91,7 @@ export default function TheaterSearchResults({ params }: { params: { query: stri
           ) : error ? (
             <div className="text-center text-red-500">{error}</div>
           ) : theaters.length === 0 ? (
-            <div className="text-center text-gray-500">No theaters found matching "{params.query}"</div>
+            <div className="text-center text-gray-500">No theaters found matching "{decodedQuery}"</div>
           ) : (
             <div className="space-y-4">
               {theaters.map((theater) => (
