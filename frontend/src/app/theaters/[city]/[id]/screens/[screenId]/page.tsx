@@ -220,7 +220,7 @@ export default function ScreenDetails({ params }: { params: { city: string; id: 
                         <Label htmlFor="suggested-seat">Suggested Seat</Label>
                         <Input
                           id="suggested-seat"
-                          placeholder="e.g., Row F, Seat 10"
+                          placeholder="e.g., F10"
                           value={suggestedSeat}
                           onChange={(e) => setSuggestedSeat(e.target.value)}
                           required
