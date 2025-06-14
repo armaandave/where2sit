@@ -104,7 +104,7 @@ export default function Home() {
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-4">Where To Sit</h1>
+          <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-4">Where2Sit</h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">Find the Best Seat in Any Theater</p>
         </div>
 

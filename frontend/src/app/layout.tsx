@@ -9,7 +9,7 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: 'Best Seat Finder',
+  title: 'Where2Sit',
   description: 'Find the best seat in any theater',
 }
 

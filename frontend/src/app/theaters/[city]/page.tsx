@@ -157,7 +157,16 @@ export default function TheatersByCity({ params }: { params: { city: string } })
 
   if (theaters.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 p-8 flex flex-col items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-8 flex flex-col items-center justify-center relative">
+        {/* Back Button */}
+        <Button
+          variant="ghost"
+          onClick={() => router.back()}
+          className="absolute top-6 left-6 z-10 px-4 py-2 text-base font-medium hover:bg-white/60 rounded-lg shadow-none"
+        >
+          <ArrowLeft className="w-5 h-5 mr-2" />
+          Back
+        </Button>
         <h1 className="text-4xl font-bold mb-4">No Theaters Found</h1>
         <p className="text-gray-600 dark:text-gray-400">Sorry, no theaters were found for {decodeURIComponent(initialCity)}.</p>
       </div>
