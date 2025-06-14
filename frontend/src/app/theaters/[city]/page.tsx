@@ -75,6 +75,11 @@ export default function TheatersByCity({ params }: { params: { city: string } })
       setError(null)
       try {
         const res = await fetch(`https://bestseat.fly.dev/theaters/by_city/${params.city}`)
+        if (res.status === 404) {
+          setTheaters([]) // No theaters found, treat as empty results
+          setError(null)
+          return // Exit early as it's not a hard error
+        }
         if (!res.ok) {
           throw new Error("Failed to fetch theaters")
         }
@@ -167,8 +172,8 @@ export default function TheatersByCity({ params }: { params: { city: string } })
           <ArrowLeft className="w-5 h-5 mr-2" />
           Back
         </Button>
-        <h1 className="text-4xl font-bold mb-4">No Theaters Found</h1>
-        <p className="text-gray-600 dark:text-gray-400">Sorry, no theaters were found for {decodeURIComponent(initialCity)}.</p>
+        <h1 className="text-4xl font-bold mb-4">No Cities Found</h1>
+        <p className="text-gray-600 dark:text-gray-400">Sorry, no cities were found matching "{decodeURIComponent(initialCity)}".</p>
       </div>
     );
   }

@@ -174,9 +174,6 @@ export default function ScreenDetails({ params }: { params: { city: string; id: 
                   {theater.name} - {selectedScreen.name || `Screen ${selectedScreen.screen_number}`}
                 </h2>
                 <p className="text-gray-600 mb-2">{selectedScreen.type || ""}</p>
-                <p className="text-sm text-gray-500">
-                  Best seat recommendation based on optimal viewing angle and distance
-                </p>
               </div>
 
               {/* Best Seat Display */}
@@ -192,10 +189,6 @@ export default function ScreenDetails({ params }: { params: { city: string; id: 
                       ) : (
                         <p className="text-gray-600 text-lg font-medium">No best seat recommendation yet.</p>
                       )}
-
-                      <p className="text-gray-600 max-w-md mx-auto">
-                        This seat offers the optimal viewing experience with perfect screen angle, sound quality, and distance.
-                      </p>
                     </div>
                   </div>
                 </CardContent>

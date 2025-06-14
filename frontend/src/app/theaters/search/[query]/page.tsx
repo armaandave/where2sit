@@ -35,12 +35,17 @@ export default function TheaterSearchResults({ params }: { params: { query: stri
       setError(null)
       try {
         const response = await fetch("https://bestseat.fly.dev/theaters")
+        if (response.status === 404) {
+          setTheaters([]) // No theaters found, treat as empty results
+          setError(null)
+          return // Exit early as it's not a hard error
+        }
         if (!response.ok) {
           throw new Error("Failed to fetch theaters")
         }
         const allTheaters = await response.json()
         
-        // Filter theaters by name (case insensitive) using the decoded query
+        // Filter theaters by name (case insensitive)
         const searchQuery = decodedQuery.toLowerCase()
         const matchingTheaters = allTheaters.filter((theater: Theater) => 
           theater.name.toLowerCase().includes(searchQuery)

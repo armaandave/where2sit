@@ -8,6 +8,7 @@ import { MapPin, Search } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import * as motion from "motion/react-client"
+import MotionGradientButton from "@/components/MotionGradientButton"
 
 interface Theater {
   id: string;
@@ -34,7 +35,7 @@ export default function Home() {
   const [theaterSearchQuery, setTheaterSearchQuery] = useState("")
   const [allTheaters, setAllTheaters] = useState<Theater[]>([])
   const [showTheaterSuggestions, setShowTheaterSuggestions] = useState(false)
-  const [isCitySearch, setIsCitySearch] = useState(true) // New state for toggle
+  const [isCitySearch, setIsCitySearch] = useState(false)
 
   useEffect(() => {
     const fetchCities = async () => {
@@ -256,13 +257,12 @@ export default function Home() {
               </div>
             )}
 
-            <Button
+            <MotionGradientButton
               onClick={handleGo}
               className="w-full h-12 text-base bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-lg"
-              disabled={loading || (!citySearchQuery.trim() && !theaterSearchQuery.trim())}
             >
               {loading ? "Searching..." : "Go"}
-            </Button>
+            </MotionGradientButton>
             {error && <div className="text-center text-red-500 text-sm mt-2">Error: {error}</div>}
           </CardContent>
         </Card>

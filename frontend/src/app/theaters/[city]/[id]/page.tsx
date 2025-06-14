@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { MapPin, ArrowLeft } from "lucide-react"
-import Loading from "./loading"
+import Loading from "../loading"
+import MotionGradientButton from "@/components/MotionGradientButton"
 
 // API types
 interface Screen {
@@ -122,29 +123,18 @@ export default function TheaterDetails({ params }: { params: { city: string; id:
               </Card>
 
               {/* Screens Grid */}
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {(theater.screens || []).map((screen) => (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {theater.screens?.map((screen) => (
                   <Card
                     key={screen.id}
-                    className="shadow-lg border-0 bg-white/80 backdrop-blur-sm hover:shadow-xl transition-shadow"
+                    className="flex flex-col items-center p-6 bg-white/90 backdrop-blur-sm shadow-lg rounded-lg border-0"
                   >
-                    <CardContent className="p-6">
-                      <div className="space-y-4">
-                        <div>
-                          <h3 className="text-xl font-semibold text-gray-900">
-                            {screen.name || `Screen ${screen.screen_number}`}
-                          </h3>
-                          <p className="text-sm text-gray-600">{screen.type || ""}</p>
-                        </div>
-
-                        <Button
-                          onClick={() => handleViewSeatMap(screen)}
-                          className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
-                        >
-                          View Seat Map
-                        </Button>
-                      </div>
-                    </CardContent>
+                    <h3 className="text-xl font-bold text-gray-900 mb-4">
+                      {screen.name || `Screen ${screen.screen_number}`}
+                    </h3>
+                    <MotionGradientButton onClick={() => handleViewSeatMap(screen)}>
+                      View Seat Map
+                    </MotionGradientButton>
                   </Card>
                 ))}
               </div>
