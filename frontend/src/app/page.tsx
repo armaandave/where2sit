@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { MapPin, Search } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
+import * as motion from "motion/react-client"
 
 interface Theater {
   id: string;
@@ -33,6 +34,7 @@ export default function Home() {
   const [theaterSearchQuery, setTheaterSearchQuery] = useState("")
   const [allTheaters, setAllTheaters] = useState<Theater[]>([])
   const [showTheaterSuggestions, setShowTheaterSuggestions] = useState(false)
+  const [isCitySearch, setIsCitySearch] = useState(true) // New state for toggle
 
   useEffect(() => {
     const fetchCities = async () => {
@@ -68,13 +70,24 @@ export default function Home() {
   }, [])
 
   const handleGo = async () => {
-    if (citySearchQuery) {
-      router.push(`/theaters/${citySearchQuery.toLowerCase().replace(/\s+/g, "-")}`);
-    } else if (theaterSearchQuery) {
-      // Encode the theater search query for the URL, without replacing spaces with hyphens
-      const encodedQuery = encodeURIComponent(theaterSearchQuery);
-      router.push(`/theaters/search/${encodedQuery}`);
+    setLoading(true);
+    setError(null);
+
+    if (isCitySearch) {
+      if (citySearchQuery.trim()) {
+        router.push(`/theaters/${citySearchQuery.toLowerCase().replace(/\s+/g, "-")}`);
+      } else {
+        setError("Please enter a city name.");
+      }
+    } else { // Theater search
+      if (theaterSearchQuery.trim()) {
+        const encodedQuery = encodeURIComponent(theaterSearchQuery);
+        router.push(`/theaters/search/${encodedQuery}`);
+      } else {
+        setError("Please enter a theater name.");
+      }
     }
+    setLoading(false);
   };
 
   const handleSuggestionClick = useCallback((city: string) => {
@@ -99,6 +112,40 @@ export default function Home() {
     theater.name.toLowerCase().includes(theaterSearchQuery.toLowerCase())
   ).slice(0, 5) // Limit to 5 theater suggestions
 
+  const toggleSwitch = () => {
+    setIsCitySearch(!isCitySearch);
+    // Clear both search queries when toggling
+    setCitySearchQuery("");
+    setTheaterSearchQuery("");
+    setShowSuggestions(false);
+    setShowTheaterSuggestions(false);
+    setError(null); // Clear any previous errors
+  };
+
+  const containerStyle = {
+    width: 75,
+    height: 20,
+    backgroundColor: "rgba(0, 0, 0, 0.1)",
+    borderRadius: 10,
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    padding: 2.5,
+    margin: "0",
+  };
+
+  const handleStyle = {
+    width: 35,
+    height: 15,
+    backgroundColor: "#4f46e5",
+    borderRadius: "7.5px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    color: "white",
+    fontWeight: "bold",
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="container mx-auto px-4 py-8">
@@ -110,84 +157,104 @@ export default function Home() {
 
         {/* Home Screen */}
         <Card className="max-w-lg mx-auto w-full shadow-xl border-0 bg-white/80 backdrop-blur-sm">
-          <CardContent className="space-y-6 px-8 py-8">
-            <div className="space-y-2">
-              <Label htmlFor="city-search">Search for a city</Label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <Input
-                  id="city-search"
-                  placeholder="Enter city..."
-                  value={citySearchQuery}
-                  onChange={(e) => {
-                    setCitySearchQuery(e.target.value)
-                    setShowSuggestions(true)
-                    setTheaterSearchQuery("") // Clear theater search when typing in city search
+          {/* Toggle Switch */}
+          <CardHeader className="pt-4 pb-2 flex flex-row items-center justify-center space-x-2">
+            <span className={`text-lg font-bold ${isCitySearch ? 'text-gray-900' : 'text-gray-400'} transition-colors duration-200`}>City</span>
+            <button
+              className="relative rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              style={{
+                  ...containerStyle,
+                  justifyContent: isCitySearch ? "flex-start" : "flex-end",
+                  margin: "0",
+              }}
+              onClick={toggleSwitch}
+            >
+              <motion.div
+                  style={handleStyle}
+                  layout
+                  transition={{
+                      type: "spring",
+                      visualDuration: 0.2,
+                      bounce: 0.2,
                   }}
-                  onFocus={() => setShowSuggestions(true)}
-                  onBlur={() => setTimeout(() => setShowSuggestions(false), 100)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      handleGo()
-                    }
-                  }}
-                  className="pl-10 h-12 text-base"
-                />
-                {showSuggestions && citySearchQuery.length > 0 && filteredCities.length > 0 && (
-                  <ul className="absolute z-10 w-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md mt-1 shadow-lg max-h-60 overflow-y-auto">
-                    {filteredCities.map((city) => (
-                      <li
-                        key={city}
-                        className="px-4 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 text-left"
-                        onMouseDown={() => handleSuggestionClick(city)} // Use onMouseDown to prevent onBlur from firing first
-                      >
-                        {city}
-                      </li>
-                    ))}
-                  </ul>
-                )}
+              />
+            </button>
+            <span className={`text-lg font-bold ${!isCitySearch ? 'text-gray-900' : 'text-gray-400'} transition-colors duration-200`}>Theater</span>
+          </CardHeader>
+          <CardContent className="space-y-6 px-8 py-4">
+            {isCitySearch ? (
+              <div className="space-y-2">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <Input
+                    id="city-search"
+                    placeholder="Enter city..."
+                    value={citySearchQuery}
+                    onChange={(e) => {
+                      setCitySearchQuery(e.target.value)
+                      setShowSuggestions(true)
+                    }}
+                    onFocus={() => setShowSuggestions(true)}
+                    onBlur={() => setTimeout(() => setShowSuggestions(false), 100)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        handleGo()
+                      }
+                    }}
+                    className="pl-10 h-12 text-base"
+                  />
+                  {showSuggestions && citySearchQuery.length > 0 && filteredCities.length > 0 && (
+                    <ul className="absolute z-10 w-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md mt-1 shadow-lg max-h-60 overflow-y-auto">
+                      {filteredCities.map((city) => (
+                        <li
+                          key={city}
+                          className="px-4 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 text-left"
+                          onMouseDown={() => handleSuggestionClick(city)}
+                        >
+                          {city}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
               </div>
-            </div>
-
-            <p className="text-center text-gray-700 dark:text-gray-300 my-4">or</p>
-
-            <div className="space-y-2">
-              <Label htmlFor="theater-search">Search for a theater name</Label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <Input
-                  id="theater-search"
-                  placeholder="Enter theater name..."
-                  value={theaterSearchQuery}
-                  onChange={(e) => {
-                    setTheaterSearchQuery(e.target.value);
-                    setShowTheaterSuggestions(true);
-                    setCitySearchQuery(""); // Clear city search when typing in theater search
-                  }}
-                  onFocus={() => setShowTheaterSuggestions(true)}
-                  onBlur={() => setTimeout(() => setShowTheaterSuggestions(false), 100)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      handleGo();
-                    }
-                  }}
-                  className="pl-10 h-12 text-base"
-                />
-                {showTheaterSuggestions && theaterSearchQuery.length > 0 && filteredTheaters.length > 0 && (
-                  <ul className="absolute z-10 w-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md mt-1 shadow-lg max-h-60 overflow-y-auto">
-                    {filteredTheaters.map((theater) => (
-                      <li
-                        key={theater.id}
-                        className="px-4 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 text-left"
-                        onMouseDown={() => handleTheaterSuggestionClick(theater)} // Pass the full theater object
-                      >
-                        {theater.name} ({theater.address?.city})
-                      </li>
-                    ))}
-                  </ul>
-                )}
+            ) : (
+              <div className="space-y-2">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <Input
+                    id="theater-search"
+                    placeholder="Enter theater name..."
+                    value={theaterSearchQuery}
+                    onChange={(e) => {
+                      setTheaterSearchQuery(e.target.value);
+                      setShowTheaterSuggestions(true);
+                    }}
+                    onFocus={() => setShowTheaterSuggestions(true)}
+                    onBlur={() => setTimeout(() => setShowTheaterSuggestions(false), 100)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        handleGo();
+                      }
+                    }}
+                    className="pl-10 h-12 text-base"
+                  />
+                  {showTheaterSuggestions && theaterSearchQuery.length > 0 && filteredTheaters.length > 0 && (
+                    <ul className="absolute z-10 w-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md mt-1 shadow-lg max-h-60 overflow-y-auto">
+                      {filteredTheaters.map((theater) => (
+                        <li
+                          key={theater.id}
+                          className="px-4 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 text-left"
+                          onMouseDown={() => handleTheaterSuggestionClick(theater)}
+                        >
+                          {theater.name} ({theater.address?.city})
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
 
             <Button
               onClick={handleGo}
@@ -196,7 +263,7 @@ export default function Home() {
             >
               {loading ? "Searching..." : "Go"}
             </Button>
-            {error && <div className="text-center text-red-500 text-sm mt-2">{error}</div>}
+            {error && <div className="text-center text-red-500 text-sm mt-2">Error: {error}</div>}
           </CardContent>
         </Card>
       </div>
