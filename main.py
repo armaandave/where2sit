@@ -4,8 +4,9 @@ from sqlalchemy.orm import Session
 from database import SessionLocal
 from models import Theater, Screen, BestSeatSuggestion
 from sqlalchemy import distinct
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 from typing import List
+import re
 
 app = FastAPI()
 
@@ -176,6 +177,13 @@ def get_theater_screens(theater_id: int, db: Session = Depends(get_db)):
 class BestSeatInput(BaseModel):
     suggested_seat: str
     user_notes: str | None = None
+
+    @validator('suggested_seat')
+    def validate_seat_format(cls, v):
+        # Validate seat format: letter followed by number (e.g., F10)
+        if not re.match(r'^[A-Za-z][0-9]+$', v):
+            raise ValueError('Invalid seat format. Please use format like "F10" (letter followed by number)')
+        return v.upper()  # Convert to uppercase for consistency
 
 @app.post("/screens/{screen_id}/suggest_best_seat")
 def submit_best_seat(screen_id: int, data: BestSeatInput, db: Session = Depends(get_db)):

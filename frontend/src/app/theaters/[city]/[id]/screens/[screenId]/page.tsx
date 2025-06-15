@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import React from "react"
+import CharactersRemaining from "@/components/CharactersRemaining"
 
 // API types
 interface BestSeatSuggestion {
@@ -54,6 +55,7 @@ export default function ScreenDetails({ params }: { params: { city: string; id: 
   const [submissionMessage, setSubmissionMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bestSeat, setBestSeat] = useState<BestSeatSuggestion | null>(null);
+  const [seatError, setSeatError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchTheater = async () => {
@@ -92,6 +94,28 @@ export default function ScreenDetails({ params }: { params: { city: string; id: 
     fetchTheater()
   }, [params.id, params.screenId])
 
+  // Add validation function
+  const validateSeatNumber = (seat: string): boolean => {
+    // Allow format like "F10" or "A1" - letter followed by number
+    const seatPattern = /^[A-Za-z][0-9]+$/;
+    return seatPattern.test(seat);
+  };
+
+  // Update the onChange handler for suggestedSeat
+  const handleSeatChange = (value: string) => {
+    const upperValue = value.toUpperCase(); // Convert to uppercase
+    setSuggestedSeat(upperValue);
+    
+    if (!upperValue) {
+      setSeatError(null);
+    } else if (!validateSeatNumber(upperValue)) {
+      setSeatError("Please enter a valid seat number (e.g., F10)");
+    } else {
+      setSeatError(null);
+    }
+  };
+
+  // Update the form submission handler
   const handleSubmitSuggestion = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -100,6 +124,12 @@ export default function ScreenDetails({ params }: { params: { city: string; id: 
 
     if (!suggestedSeat.trim()) {
       setError("Please enter a suggested seat.");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!validateSeatNumber(suggestedSeat)) {
+      setError("Please enter a valid seat number (e.g., F10)");
       setIsSubmitting(false);
       return;
     }
@@ -125,6 +155,7 @@ export default function ScreenDetails({ params }: { params: { city: string; id: 
       setSubmissionMessage(data.message);
       setSuggestedSeat("");
       setUserNotes("");
+      setSeatError(null);
       // After successful submission, re-fetch screen data to update displayed best seat
       const updatedRes = await fetch(`https://bestseat.fly.dev/theaters/${params.id}`);
       if (updatedRes.ok) {
@@ -211,28 +242,32 @@ export default function ScreenDetails({ params }: { params: { city: string; id: 
                     <form onSubmit={handleSubmitSuggestion} className="space-y-4">
                       <div className="space-y-2">
                         <Label htmlFor="suggested-seat">Suggested Seat</Label>
-                        <Input
-                          id="suggested-seat"
-                          placeholder="e.g., F10"
+                        <CharactersRemaining
                           value={suggestedSeat}
-                          onChange={(e) => setSuggestedSeat(e.target.value)}
-                          required
+                          maxLength={4}
+                          onChange={handleSeatChange}
+                          placeholder="e.g., F10"
+                          className={seatError ? "border-red-500" : ""}
+                          required={true}
+                          pattern="[A-Za-z][0-9]+"
                         />
+                        {seatError && <p className="text-sm text-red-500 mt-1">{seatError}</p>}
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="user-notes">Notes (Optional)</Label>
-                        <Textarea
-                          id="user-notes"
-                          placeholder="e.g., Great center view, low head obstruction"
+                        <CharactersRemaining
+                          as="textarea"
                           value={userNotes}
-                          onChange={(e) => setUserNotes(e.target.value)}
+                          maxLength={100}
+                          onChange={(value) => setUserNotes(value)}
+                          placeholder="e.g., Great center view, low head obstruction"
                           rows={3}
                         />
                       </div>
                       <Button
                         type="submit"
                         className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300"
-                        disabled={isSubmitting}
+                        disabled={isSubmitting || !!seatError}
                       >
                         {isSubmitting ? "Submitting..." : "Submit Suggestion"}
                       </Button>
