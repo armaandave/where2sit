@@ -132,8 +132,11 @@ export default function TheaterDetails({ params }: { params: { city: string; id:
                     <h3 className="text-xl font-bold text-gray-900 mb-4">
                       {screen.name || `Screen ${screen.screen_number}`}
                     </h3>
-                    <MotionGradientButton onClick={() => handleViewSeatMap(screen)}>
-                      View Seat Map
+                    <MotionGradientButton
+                      onClick={() => handleViewSeatMap(screen)}
+                      className="w-full h-12 text-base bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-lg"
+                    >
+                      View
                     </MotionGradientButton>
                   </Card>
                 ))}

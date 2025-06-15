@@ -37,13 +37,13 @@ export default function MotionGradientButton({ onClick, children, className }: M
     )
 
     return (
-        <button
+        <motion.button
             ref={ref}
             onClick={onClick}
             className={`relative overflow-hidden inline-flex items-center justify-center rounded-lg font-bold transition-all duration-300 ease-in-out group focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
                       ${className || 'px-6 py-3 text-lg text-white'}
             `}
-            onPointerMove={(e) => {
+            onPointerMove={(e: React.PointerEvent<HTMLButtonElement>) => {
                 if (ref.current) {
                     const rect = ref.current.getBoundingClientRect();
                     const newGradientX = (e.clientX - rect.left) / rect.width;
@@ -71,6 +71,6 @@ export default function MotionGradientButton({ onClick, children, className }: M
             <span className="relative z-10 text-white leading-none">
                 {children}
             </span>
-        </button>
+        </motion.button>
     )
 } 
