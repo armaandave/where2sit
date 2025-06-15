@@ -56,6 +56,16 @@ export default function ScreenDetails({ params }: { params: { city: string; id: 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bestSeat, setBestSeat] = useState<BestSeatSuggestion | null>(null);
   const [seatError, setSeatError] = useState<string | null>(null);
+  const [notesError, setNotesError] = useState<string | null>(null);
+
+  // Forbidden words list for client-side validation
+  const forbiddenWords = [
+    "fuck", "shit", "bitch", "asshole", "dick", "pussy", "bastard", "slut",
+    "cunt", "faggot", "nigger", "retard", "whore", "rape", "nazi", "hitler",
+    "chink", "spic", "kike", "coon", "dyke", "tranny", "moron", "fag", "crap",
+    "dumbass", "jackass", "twat", "cock", "balls", "suckmydick", "kill yourself",
+    "gas the jews", "heil hitler"
+  ];
 
   useEffect(() => {
     const fetchTheater = async () => {
@@ -101,6 +111,13 @@ export default function ScreenDetails({ params }: { params: { city: string; id: 
     return seatPattern.test(seat);
   };
 
+  // Add validation function for notes
+  const validateUserNotes = (notes: string): boolean => {
+    if (!notes) return true; // Allow empty notes
+    const lowerCaseNotes = notes.toLowerCase();
+    return !forbiddenWords.some(word => lowerCaseNotes.includes(word));
+  };
+
   // Update the onChange handler for suggestedSeat
   const handleSeatChange = (value: string) => {
     const upperValue = value.toUpperCase(); // Convert to uppercase
@@ -115,12 +132,23 @@ export default function ScreenDetails({ params }: { params: { city: string; id: 
     }
   };
 
+  // New onChange handler for user notes
+  const handleNotesChange = (value: string) => {
+    setUserNotes(value);
+    if (!validateUserNotes(value)) {
+      setNotesError("Your notes contain forbidden language. Please revise.");
+    } else {
+      setNotesError(null);
+    }
+  };
+
   // Update the form submission handler
   const handleSubmitSuggestion = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
     setSubmissionMessage(null);
     setError(null);
+    setNotesError(null);
 
     if (!suggestedSeat.trim()) {
       setError("Please enter a suggested seat.");
@@ -130,6 +158,13 @@ export default function ScreenDetails({ params }: { params: { city: string; id: 
 
     if (!validateSeatNumber(suggestedSeat)) {
       setError("Please enter a valid seat number (e.g., F10)");
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Client-side validation for notes before submission
+    if (userNotes && !validateUserNotes(userNotes)) {
+      setNotesError("Your notes contain forbidden language. Please revise.");
       setIsSubmitting(false);
       return;
     }
@@ -156,6 +191,7 @@ export default function ScreenDetails({ params }: { params: { city: string; id: 
       setSuggestedSeat("");
       setUserNotes("");
       setSeatError(null);
+      setNotesError(null);
       // After successful submission, re-fetch screen data to update displayed best seat
       const updatedRes = await fetch(`https://bestseat.fly.dev/theaters/${params.id}`);
       if (updatedRes.ok) {
@@ -259,15 +295,18 @@ export default function ScreenDetails({ params }: { params: { city: string; id: 
                           as="textarea"
                           value={userNotes}
                           maxLength={100}
-                          onChange={(value) => setUserNotes(value)}
+                          onChange={handleNotesChange}
                           placeholder="e.g., Great center view, low head obstruction"
                           rows={3}
+                          className={notesError ? "border-red-500" : ""}
                         />
+                        <p className="text-sm text-gray-500 mt-1">Please keep your notes respectful and avoid offensive language.</p>
+                        {notesError && <p className="text-sm text-red-500 mt-1">{notesError}</p>}
                       </div>
                       <Button
                         type="submit"
                         className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300"
-                        disabled={isSubmitting || !!seatError}
+                        disabled={isSubmitting || !!seatError || !!notesError}
                       >
                         {isSubmitting ? "Submitting..." : "Submit Suggestion"}
                       </Button>
