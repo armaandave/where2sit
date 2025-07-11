@@ -48,7 +48,7 @@ export default function TheaterSearchResults({ params }: { params: { query: stri
         // Filter theaters by name (case insensitive)
         const searchQuery = decodedQuery.toLowerCase()
         const matchingTheaters = allTheaters.filter((theater: Theater) => 
-          theater.name.toLowerCase().includes(searchQuery)
+          theater.name && theater.name.toLowerCase().includes(searchQuery)
         )
 
         setTheaters(matchingTheaters)

@@ -13,12 +13,12 @@ import MotionGradientButton from "@/components/MotionGradientButton"
 interface Theater {
   id: string;
   name: string;
-  address: {
-    street: string;
-    city: string;
-    state: string;
-    postcode: string;
-    country: string;
+  address?: {
+    street?: string;
+    city?: string;
+    state?: string;
+    postcode?: string;
+    country?: string;
   };
   brand?: string;
   chain?: string;
@@ -101,8 +101,10 @@ export default function Home() {
   const handleTheaterSuggestionClick = useCallback((theater: Theater) => {
     setTheaterSearchQuery(theater.name);
     setShowTheaterSuggestions(false);
-    const sanitizedCity = theater.address.city.trim().toLowerCase().replace(/\s+/g, "-");
-    router.push(`/theaters/${sanitizedCity}/${theater.id}`);
+    const sanitizedCity = theater.address?.city?.trim().toLowerCase().replace(/\s+/g, "-");
+    if (sanitizedCity) {
+      router.push(`/theaters/${sanitizedCity}/${theater.id}`);
+    }
   }, [router]);
 
   const filteredCities = cities.filter(city =>
@@ -110,7 +112,7 @@ export default function Home() {
   ).slice(0, 5) // Limit to 5 suggestions
 
   const filteredTheaters = allTheaters.filter(theater =>
-    theater.name.toLowerCase().includes(theaterSearchQuery.toLowerCase())
+    theater.name && theater.name.toLowerCase().includes(theaterSearchQuery.toLowerCase())
   ).slice(0, 5) // Limit to 5 theater suggestions
 
   const toggleSwitch = () => {

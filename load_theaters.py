@@ -30,16 +30,36 @@ AREAS = [
     {"name": "Somerville", "state": "MA", "country": "US"},
     {"name": "Brookline", "state": "MA", "country": "US"},
     {"name": "Cambridge", "state": "MA", "country": "US"},
+    #BAY AREA
+    {"name": "San Francisco", "state": "CA", "country": "US"},
+    {"name": "San Jose", "state": "CA", "country": "US"},
+    {"name": "Oakland", "state": "CA", "country": "US"},
+    {"name": "San Mateo", "state": "CA", "country": "US"},
+    {"name": "Redwood City", "state": "CA", "country": "US"},
+    {"name": "Palo Alto", "state": "CA", "country": "US"},
+    #PHILADELPHIA AREA
+    {"name": "Philadelphia", "state": "PA", "country": "US"},
+    {"name": "West Chester", "state": "PA", "country": "US"},
+    {"name": "Exton", "state": "PA", "country": "US"},
+    {"name": "Malvern", "state": "PA", "country": "US"},
+    {"name": "Wayne", "state": "PA", "country": "US"},
+    {"name": "Bala Cynwyd", "state": "PA", "country": "US"},
+    {"name": "Langhorne", "state": "PA", "country": "US"},
+    {"name": "Bensalem", "state": "PA", "country": "US"},
+
 ]
 
 for area in AREAS:
     query = f"""
     [out:json][timeout:25];
-    area["name"="{area['name']}"][admin_level=8];
+    area["name"="{area['name']}"][admin_level=8]->.searchArea;
     (
-      node["amenity"="cinema"](area);
-      way["amenity"="cinema"](area);
-      relation["amenity"="cinema"](area);
+      node["amenity"="cinema"](area.searchArea);
+      way["amenity"="cinema"](area.searchArea);
+      relation["amenity"="cinema"](area.searchArea);
+      node["amenity"="cinema"](around:5000,40.1251,-74.9545);  // Bensalem coordinates
+      way["amenity"="cinema"](around:5000,40.1251,-74.9545);
+      relation["amenity"="cinema"](around:5000,40.1251,-74.9545);
     );
     out center;
     """
